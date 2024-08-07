@@ -163,6 +163,12 @@ impl<B: Bitmap> MmapRegionBuilder<B> {
             return Err(Error::Mmap(io::Error::last_os_error()));
         }
 
+        if self.hugetlbfs.unwrap_or(false) {
+            unsafe {
+                libc::madvise(addr, self.size, libc::MADV_HUGEPAGE);
+            };
+        }
+
         #[cfg(miri)]
         if self.size == 0 {
             return Err(Error::Mmap(io::Error::from_raw_os_error(libc::EINVAL)));
